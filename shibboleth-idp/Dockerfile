@@ -1,16 +1,13 @@
 FROM debian:jessie
 
-ENV JAVA_HOME=/usr
+ENV JAVA_HOME="/usr"
+ENV CATALINA_PID="/var/run/tomcat8.pid"
+ENV CATALINA_HOME="/usr/share/tomcat8"
+ENV CATALINA_BASE="/var/lib/tomcat8"
+ENV JAVA_OPTS="-Xmx1024m"
 
 RUN apt-get update -y && \
-    apt-get install -y openssl apache2 supervisor tomcat8  libapache2-mod-jk wget && \
-    a2enmod ssl && \
-    a2enmod jk && \	
-    a2enmod headers
-
-ADD default-ssl.conf /etc/apache2/sites-available/default.conf 
-RUN a2dissite 000-default && \
-    a2ensite default
+    apt-get install -y tomcat8 wget curl vim
 
 RUN cd /root && \
     wget http://shibboleth.net/downloads/identity-provider/latest/shibboleth-identity-provider-3.1.2.tar.gz && \
@@ -20,31 +17,20 @@ RUN cd /root && \
     wget https://build.shibboleth.net/nexus/service/local/repositories/thirdparty/content/javax/servlet/jstl/1.2/jstl-1.2.jar
 
 RUN cd /root/shibboleth-identity-provider-3.1.2/bin && \
-    ./install.sh -Didp.sealer.password=notasecurepassword -Didp.src.dir=/root/shibboleth-identity-provider-3.1.2 -Didp.target.dir=/opt/shibboleth-idp -Didp.host.name=www.test.org -Dentityid=https://www.test.org/idp/shibboleth -Didp.scope=test.org -Didp.keystore.password=notasecurepassword && \
+    ./install.sh -Didp.sealer.password=notasecurepassword -Didp.src.dir=/root/shibboleth-identity-provider-3.1.2 -Didp.target.dir=/opt/shibboleth-idp -Didp.host.name=idp.shibboleth.example -Dentityid=https://idp.shibboleth.example/idp/shibboleth -Didp.scope=idp.shibboleth.example -Didp.keystore.password=notasecurepassword && \
     sed -i 's/ password/notasecurepassword/g' /opt/shibboleth-idp/conf/idp.properties && \
     rm /root/shibboleth-identity-provider-3.1.2.tar.gz
  
 RUN   rm -r /var/lib/tomcat8/webapps/ROOT
 
-COPY ROOT.xml /etc/tomcat8/Catalina/localhost/ROOT.xml
+COPY tomcat/server.xml /etc/tomcat8/server.xml
+COPY tomcat/ROOT.xml /etc/tomcat8/Catalina/localhost/ROOT.xml
 
-COPY supervisor/tomcat-wrapper.sh /usr/bin/tomcat-wrapper.sh
-RUN chmod u+x /usr/bin/tomcat-wrapper.sh
+COPY idp/metadata-providers.xml /opt/shibboleth-idp/conf/metadata-providers.xml
+COPY idp/idp.properties /opt/shibboleth-idp/conf/idp.properties
+COPY idp/attribute-resolver.xml /opt/shibboleth-idp/conf/attribute-resolver.xml
 
-RUN mkdir -p /data/idp/metadata && \
-    cp /opt/shibboleth-idp/metadata/idp-metadata.xml /data/idp/metadata/idp-metadata.xml
+VOLUME ["/var/log"]
+EXPOSE 8009 8080
 
-COPY metadata-providers.xml /opt/shibboleth-idp/conf/metadata-providers.xml
-COPY idp.properties /opt/shibboleth-idp/conf/idp.properties
-COPY attribute-resolver.xml /opt/shibboleth-idp/conf/attribute-resolver.xml
-
-#ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-#ADD index.html /var/www/index.html
-#ADD worker.properties etc/libapache2-mod-jk/workers.properties
-
-VOLUME ["/data/idp"]
-
-EXPOSE 443 8080
-
-#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-CMD ["/bin/bash"]
+CMD ["usr/share/tomcat8/bin/catalina.sh", "run"]

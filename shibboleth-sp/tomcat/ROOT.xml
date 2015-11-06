@@ -1,0 +1,5 @@
+<Context path="" docBase="/opt/shibboleth-idp/webapp"
+	 override="true"
+         privileged="true"
+         antiResourceLocking="false"
+         swallowOutput="true" />
