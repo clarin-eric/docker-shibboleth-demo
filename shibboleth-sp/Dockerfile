@@ -54,6 +54,9 @@ RUN mkdir -p mkdir -p /var/run/shibboleth && \
     sed -i 's/handlerSSL="false"/handlerSSL="true"/g' /etc/shibboleth/shibboleth2.xml && \
     sed -i 's/<CredentialResolver type="File" key="sp-key.pem" certificate="sp-cert.pem"\/>/<CredentialResolver type="File" key="\/etc\/shibboleth\/certs\/shib.key" certificate="\/etc\/shibboleth\/certs\/shib.crt"\/>/g' /etc/shibboleth/shibboleth2.xml
 
+#RUN mkdir -p /data/sp/metadata && \
+#    cp /opt/shibboleth/metadata/idp-metadata.xml /data/idp/metadata/idp-metadata.xml
+
 #RUN ln -sf /dev/stderr /var/log/apache2/error.log
 #RUN ln -sf /dev/stdout /var/log/apache2/access.log
 #RUN ln -sf /dev/stdout /var/log/apache2/mod_jk.log
@@ -61,6 +64,9 @@ RUN mkdir -p mkdir -p /var/run/shibboleth && \
 ADD supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 ADD index.html /var/www/index.html
 ADD worker.properties etc/libapache2-mod-jk/workers.properties
+
+#Fetch sp metadata after running
+#curl -k -o /tmp/metadata.xml https://localhost/Shibboleth.sso/Metadata
 
 VOLUME ["/var/www", "/var/log/apache2", "/var/log/shibboleth", "/etc/supervisor", "/var/log/supervisor"]
 
