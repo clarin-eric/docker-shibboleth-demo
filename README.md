@@ -30,12 +30,21 @@ After running the makefile you'll end up with an environment similar to the foll
 ```
 
 The setup consists of two running containers:
-- shibboleth-sp
-- shibboleth-idp
+- shibboleth-sp, running supervisord in the foreground which in turns runs the shibd daemon, the apache 2,4 server and a tomcat 8 server.
+- shibboleth-idp, running tomcat 8 in the foreground with the IDP servlet deployed.
+
 and three volume containers:
 - shibboleth-idp-data, idp specific content. E.g. the .htpasswd file with the credentials used for basic authentication.
-- shibboleth-sp-data, sp specific conent (currently empty).
+- shibboleth-sp-data, sp specific content (currently empty).
 - shibboleth-data, shared content such as the sp-metadat.xml and idp-metadata.xml files used to establish the trust relationship between the sp and idp.
+
 
 # Running
 
+
+After starting both containers your `docker ps` output should loook like the following:
+```
+CONTAINER ID        IMAGE                  COMMAND                CREATED             STATUS              PORTS                                      NAMES
+487ec85fdbc3        shibboleth/idp:1.0.0   "usr/share/tomcat8/b   20 minutes ago      Up 20 minutes       8080/tcp, 172.17.42.1:8009->8009/tcp       compassionate_hawking
+8a5b25f7d352        shibboleth/sp:1.0.0    "/usr/bin/supervisor   34 minutes ago      Up 34 minutes       0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp   sick_shockley
+```
