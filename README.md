@@ -29,5 +29,13 @@ After running the makefile you'll end up with an environment similar to the foll
             +------------------+        +-------------------+
 ```
 
+The setup consists of two running containers:
+- shibboleth-sp
+- shibboleth-idp
+and three volume containers:
+- shibboleth-idp-data, idp specific content. E.g. the .htpasswd file with the credentials used for basic authentication.
+- shibboleth-sp-data, sp specific conent (currently empty).
+- shibboleth-data, shared content such as the sp-metadat.xml and idp-metadata.xml files used to establish the trust relationship between the sp and idp.
+
 # Running
 
